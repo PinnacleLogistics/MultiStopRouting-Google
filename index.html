@@ -12,15 +12,6 @@
         #output {
             margin-top: 20px;
         }
-        #output > div {
-            margin-bottom: 10px;
-        }
-        #totalMiles {
-            color: green;
-        }
-        #directMileage {
-            color: orange;
-        }
         #loading {
             display: none;
             font-size: 1.2em;
@@ -39,10 +30,7 @@
     <button onclick="optimizeRoute()">Optimize Route</button>
 
     <div id="loading">Calculating route, please wait...</div>
-    <div id="output">
-        <div id="totalMiles"></div>
-        <div id="directMileage"></div>
-    </div>
+    <div id="output"></div>
     <div id="map"></div>
 
     <script>
@@ -52,7 +40,7 @@
 
         function initMap() {
             map = new google.maps.Map(document.getElementById('map'), {
-                center: { lat: 33.4484, lng: -112.0740 }, // Phoenix, AZ
+                center: { lat: -34.397, lng: 150.644 },
                 zoom: 8
             });
             directionsService = new google.maps.DirectionsService();
@@ -103,24 +91,7 @@
                         summaryPanel.innerHTML += `${route.legs[i].distance.text}, ${route.legs[i].duration.text}<br><br>`;
                     }
                     const totalDistanceMiles = Math.round(totalDistance * 0.000621371);
-                    document.getElementById('totalMiles').innerHTML = `<b>Total Miles:</b> ${totalDistanceMiles} miles<br>`;
-
-                    // Calculate direct distance from first to last stop
-                    const directRequest = {
-                        origin: origin,
-                        destination: destinations[destinations.length - 1],
-                        travelMode: 'DRIVING'
-                    };
-
-                    directionsService.route(directRequest, function(directResult, directStatus) {
-                        if (directStatus === 'OK') {
-                            const directDistance = directResult.routes[0].legs[0].distance.value;
-                            const directDistanceMiles = Math.round(directDistance * 0.000621371);
-                            document.getElementById('directMileage').innerHTML = `<b>1 Pick 1 Drop Mileage 1st stop to last stop direct:</b> ${directDistanceMiles} miles<br>`;
-                        } else {
-                            document.getElementById('directMileage').innerHTML = 'Error calculating direct distance';
-                        }
-                    });
+                    summaryPanel.innerHTML += `<b>Total Distance:</b> ${totalDistanceMiles} miles<br>`;
 
                     const mapUrl = generateMapUrl(origin, destinations[destinations.length - 1], waypointOrder);
                     summaryPanel.innerHTML += `<a href="${mapUrl}" target="_blank">${mapUrl}</a>`;
