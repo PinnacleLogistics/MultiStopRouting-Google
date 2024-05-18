@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -16,17 +16,13 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v2
       with:
-        node-version: '14'
+        node-version: '16'
 
-    - name: Install dependencies
-      run: npm install
+    - name: Replace API key in HTML
+      run: |
+        sed -i 's/API_KEY_PLACEHOLDER/${{ secrets.GOOGLE_MAPS_API_KEY }}/g' ./path/to/your/index.html
 
-    - name: Build the project
-      run: npm run build
-
-    - name: Deploy to server
+    - name: Deploy
       run: |
         echo "Deploying to server"
         # Your deployment commands here
-      env:
-        GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
