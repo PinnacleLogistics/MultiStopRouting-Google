@@ -22,4 +22,97 @@
     <textarea id="destinations" rows="10" cols="50" placeholder="Enter each destination on a new line"></textarea><br><br>
     <button onclick="calculateRoute()">Calculate Route</button>
 
-    <h2
+    <h2>Results</h2>
+    <p>Total Distance: <span id="total-distance"></span></p>
+    <p>Total Travel Time: <span id="total-time"></span></p>
+    <p>Direct Route Distance: <span id="direct-distance"></span></p>
+    <p>Route Map URL: <a id="route-url" href="#" target="_blank"></a></p>
+    <div id="map"></div>
+    <div id="error" class="error"></div>
+
+    <script>
+        let map;
+        let directionsService;
+        let directionsRenderer;
+
+        function initMap() {
+            // Initialize the map
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 7,
+                center: {lat: 37.77, lng: -122.42} // Default center
+            });
+
+            // Initialize the directions service and renderer
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer();
+            directionsRenderer.setMap(map);
+        }
+
+        function calculateRoute() {
+            const pickup = document.getElementById('pickup').value;
+            const destinations = document.getElementById('destinations').value.split('\n').filter(dest => dest.trim() !== '');
+            const errorDiv = document.getElementById('error');
+
+            if (!pickup || destinations.length === 0) {
+                errorDiv.textContent = 'Please enter both pickup location and at least one destination.';
+                return;
+            }
+
+            errorDiv.textContent = ''; // Clear previous errors
+
+            const waypoints = destinations.map(destination => ({ location: destination, stopover: true }));
+
+            const request = {
+                origin: pickup,
+                destination: destinations[destinations.length - 1],
+                waypoints: waypoints.slice(0, -1),
+                travelMode: 'DRIVING',
+                optimizeWaypoints: true // Optimize the order of waypoints for the shortest travel time
+            };
+
+            directionsService.route(request, function(result, status) {
+                if (status === 'OK') {
+                    directionsRenderer.setDirections(result);
+
+                    const route = result.routes[0];
+                    let totalDistance = 0;
+                    let totalTime = 0;
+
+                    route.legs.forEach(leg => {
+                        totalDistance += leg.distance.value;
+                        totalTime += leg.duration.value;
+                    });
+
+                    document.getElementById('total-distance').textContent = (totalDistance / 1000).toFixed(2) + ' km';
+                    document.getElementById('total-time').textContent = (totalTime / 60).toFixed(2) + ' mins';
+
+                    // Direct route calculation
+                    const directRequest = {
+                        origin: pickup,
+                        destination: destinations[destinations.length - 1],
+                        travelMode: 'DRIVING'
+                    };
+
+                    directionsService.route(directRequest, function(directResult, directStatus) {
+                        if (directStatus === 'OK') {
+                            const directLeg = directResult.routes[0].legs[0];
+                            document.getElementById('direct-distance').textContent = directLeg.distance.text;
+                        } else {
+                            errorDiv.textContent = 'Error calculating direct route: ' + directStatus;
+                        }
+                    });
+
+                    const routeUrl = 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(pickup) + '&destination=' + encodeURIComponent(destinations[destinations.length - 1]) + '&waypoints=' + encodeURIComponent(destinations.slice(0, -1).join('|'));
+                    const routeLink = document.getElementById('route-url');
+                    routeLink.href = routeUrl;
+                    routeLink.textContent = routeUrl;
+
+                } else {
+                    errorDiv.textContent = 'Error calculating route: ' + status;
+                }
+            });
+        }
+    </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA3r0p1kyloJSECy3wk1tUQS8cAyTomxfY&callback=initMap"></script>
+</body>
+</html>
