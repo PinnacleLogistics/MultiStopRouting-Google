@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -40,7 +41,7 @@
 
         function initMap() {
             map = new google.maps.Map(document.getElementById('map'), {
-                center: { lat: -34.397, lng: 150.644 },
+                center: { lat: 33.4484, lng: -112.0740 }, // Phoenix, AZ
                 zoom: 8
             });
             directionsService = new google.maps.DirectionsService();
@@ -58,7 +59,7 @@
                 return;
             }
 
-            const waypoints = destinations.map(destination => ({
+            const waypoints = destinations.slice(0, -1).map(destination => ({
                 location: destination,
                 stopover: true
             }));
@@ -66,7 +67,7 @@
             const request = {
                 origin: origin,
                 destination: destinations[destinations.length - 1],
-                waypoints: waypoints.slice(0, -1),
+                waypoints: waypoints,
                 optimizeWaypoints: true,
                 travelMode: 'DRIVING'
             };
