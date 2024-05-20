@@ -26,6 +26,8 @@
     <p>Total Distance: <span id="total-distance"></span></p>
     <p>Total Travel Time: <span id="total-time"></span></p>
     <p>Direct Route Distance: <span id="direct-distance"></span></p>
+    <p>Optimized Order of Stops:</p>
+    <ul id="optimized-stops"></ul>
     <p>Route Map URL: <a id="route-url" href="#" target="_blank"></a></p>
     <div id="map"></div>
     <div id="error" class="error"></div>
@@ -52,6 +54,7 @@
             const pickup = document.getElementById('pickup').value;
             const destinations = document.getElementById('destinations').value.split('\n').filter(dest => dest.trim() !== '');
             const errorDiv = document.getElementById('error');
+            const optimizedStopsList = document.getElementById('optimized-stops');
 
             if (!pickup || destinations.length === 0) {
                 errorDiv.textContent = 'Please enter both pickup location and at least one destination.';
@@ -59,6 +62,7 @@
             }
 
             errorDiv.textContent = ''; // Clear previous errors
+            optimizedStopsList.innerHTML = ''; // Clear previous results
 
             const waypoints = destinations.map(destination => ({ location: destination, stopover: true }));
 
@@ -85,6 +89,14 @@
 
                     document.getElementById('total-distance').textContent = (totalDistance / 1000).toFixed(2) + ' km';
                     document.getElementById('total-time').textContent = (totalTime / 60).toFixed(2) + ' mins';
+
+                    // Display the optimized order of stops
+                    const optimizedOrder = route.waypoint_order;
+                    optimizedOrder.forEach(index => {
+                        const li = document.createElement('li');
+                        li.textContent = destinations[index];
+                        optimizedStopsList.appendChild(li);
+                    });
 
                     // Direct route calculation
                     const directRequest = {
