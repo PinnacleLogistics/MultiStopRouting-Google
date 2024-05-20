@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -219,9 +218,11 @@
                 const orderedDestinations = bestOrder.map(index => destinations[index]);
                 orderedDestinations.push(finalDestination);
 
-                orderedDestinations.forEach((stop, stopNumber) => {
+                // Display the first City, ST of each segment
+                route.legs.forEach((leg, stopNumber) => {
+                    const location = formatLocation(leg.start_address);
                     const li = document.createElement('li');
-                    li.textContent = `Delivery ${stopNumber + 1}: ${formatLocation(stop)}`;
+                    li.textContent = `Delivery ${stopNumber + 1}: ${location}`;
                     optimizedStopsList.appendChild(li);
                 });
 
