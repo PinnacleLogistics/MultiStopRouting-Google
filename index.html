@@ -44,10 +44,8 @@
         <p>1 Pick 1 Drop Mileage to Final Destination Only: <span id="direct-distance" class="highlight-orange"></span></p>
 
         <h2>Optimized Route</h2>
-        <ul> 
-            id="route-segments" <br/><br/>
-            id="final-destination-section"
-        </ul>
+        <ul id="route-segments"></ul>
+        <div id="final-destination-section"></div>
         <p>Route Map URL: <a id="route-url" href="#" target="_blank"></a></p>
         <div id="map"></div>
         <div id="error" class="error"></div>
@@ -230,7 +228,6 @@ route.legs.forEach((leg, index) => {
     const legText = index === 0 
         ? `Pickup: ${startLocation} - ${distance} - ${duration} to next stop`
         : `Delivery ${index}: ${startLocation} - ${distance} - ${duration} to next stop`;
-
     if (index > 0) {
         waypoints.push(encodeURIComponent(startLocation));
     }
@@ -243,15 +240,9 @@ route.legs.forEach((leg, index) => {
 const finalDestinationSection = document.getElementById('final-destination-section');
 const lastLeg = route.legs[route.legs.length - 1];
 const finalDestinationText = `Delivery ${route.legs.length}: ${formatLocation(lastLeg.end_address)}`;
-finalDestinationSection.innerHTML = `<li>${finalDestinationText}</li>`;
-
-// Adjust the map to fit the route
-const bounds = new google.maps.LatLngBounds();
-route.legs.forEach((leg) => {
-    bounds.extend(leg.start_location);
-    bounds.extend(leg.end_location);
-});
-map.fitBounds(bounds);
+finalDestinationSection.innerHTML = `
+    <ul><li>${finalDestinationText}</li></ul>
+`;
 
 const waypointsString = waypoints.join('|');
 const routeUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(pickup)}&destination=${encodeURIComponent(finalDestination)}&waypoints=${waypointsString}`;
