@@ -48,6 +48,19 @@
             directionsRenderer.setMap(map);
         }
 
+        function formatLocation(location) {
+            const parts = location.split(',').map(part => part.trim());
+            if (parts.length === 2) {
+                const [city, state] = parts;
+                return `${capitalizeWords(city)}, ${state.toUpperCase()}`;
+            }
+            return capitalizeWords(location);
+        }
+
+        function capitalizeWords(str) {
+            return str.replace(/\b\w/g, char => char.toUpperCase());
+        }
+
         async function calculateRoute() {
             const pickup = document.getElementById('pickup').value;
             const destinations = document.getElementById('destinations').value.split('\n').filter(dest => dest.trim() !== '');
@@ -116,10 +129,16 @@
                 document.getElementById('total-time').textContent = (totalTime / 60).toFixed(2) + ' mins';
 
                 const optimizedOrder = route.waypoint_order;
-                optimizedOrder.forEach(index => {
-                    const li = document.createElement('li');
-                    li.textContent = destinations[index];
-                    optimizedStopsList.appendChild(li);
+                const uniqueStops = new Set();
+
+                optimizedOrder.forEach((index, stopNumber) => {
+                    const stop = destinations[index];
+                    if (!uniqueStops.has(stop)) {
+                        uniqueStops.add(stop);
+                        const li = document.createElement('li');
+                        li.textContent = `Delivery ${stopNumber + 1}: ${formatLocation(stop)}`;
+                        optimizedStopsList.appendChild(li);
+                    }
                 });
 
                 // Direct route calculation
