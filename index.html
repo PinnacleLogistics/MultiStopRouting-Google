@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -157,11 +157,12 @@
                 });
 
                 // Ensure the final destination is included in the URL and list
-                if (!bestOrder.includes(destinations.indexOf(finalDestination))) {
+                const finalIndex = destinations.indexOf(finalDestination);
+                if (!bestOrder.includes(finalIndex)) {
+                    bestOrder.push(finalIndex);
                     const liFinal = document.createElement('li');
-                    liFinal.textContent = `Delivery ${bestOrder.length + 1}: ${formatLocation(finalDestination)}`;
+                    liFinal.textContent = `Delivery ${bestOrder.length}: ${formatLocation(finalDestination)}`;
                     optimizedStopsList.appendChild(liFinal);
-                    bestOrder.push(destinations.indexOf(finalDestination));
                 }
 
                 // Direct route calculation
@@ -189,7 +190,8 @@
                 }
 
                 // Generate route URL
-                const routeUrl = 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(pickup) + '&destination=' + encodeURIComponent(finalDestination) + '&waypoints=' + encodeURIComponent(bestOrder.map(index => destinations[index]).join('|'));
+                const waypointsString = bestOrder.slice(0, -1).map(index => destinations[index]).join('|');
+                const routeUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(pickup)}&destination=${encodeURIComponent(finalDestination)}&waypoints=${encodeURIComponent(waypointsString)}`;
                 const routeLink = document.getElementById('route-url');
                 routeLink.href = routeUrl;
                 routeLink.textContent = routeUrl;
