@@ -200,7 +200,7 @@
 
                     const legText = index === 0 
                         ? `Pickup: ${startLocation} - ${distance} - ${duration} to next stop`
-                        : `Delivery ${index + 1}: ${startLocation} - ${distance} - ${duration} to next stop`;
+                        : `Delivery ${index}: ${startLocation} - ${distance} - ${duration} to next stop`;
 
                     const li = document.createElement('li');
                     li.textContent = legText;
@@ -210,14 +210,14 @@
                 // Add final destination as a separate section
                 const finalDestinationSection = document.getElementById('final-destination-section');
                 const lastLeg = route.legs[route.legs.length - 1];
-                const finalDestinationText = `Delivery ${route.legs.length}: ${formatLocation(lastLeg.end_address)}`;
+                const finalDestinationText = `Delivery ${route.legs.length - 1}: ${formatLocation(lastLeg.end_address)}`;
                 finalDestinationSection.innerHTML = `
                     <ul><li>${finalDestinationText}</li></ul>
                 `;
 
                 // Generate route URL using the best route data
-                const waypointsString = bestOrder.map(index => destinations[index]).join('|');
-                const routeUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(pickup)}&destination=${encodeURIComponent(finalDestination)}&waypoints=${encodeURIComponent(waypointsString)}`;
+                const waypointsString = bestOrder.map(index => encodeURIComponent(destinations[index])).join('|');
+                const routeUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(pickup)}&destination=${encodeURIComponent(finalDestination)}&waypoints=${waypointsString}`;
                 const routeLink = document.getElementById('route-url');
                 routeLink.href = routeUrl;
                 routeLink.textContent = routeUrl;
