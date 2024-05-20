@@ -48,7 +48,7 @@
             directionsRenderer.setMap(map);
         }
 
-        function calculateRoute() {
+        async function calculateRoute() {
             const pickup = document.getElementById('pickup').value;
             const destinations = document.getElementById('destinations').value.split('\n').filter(dest => dest.trim() !== '');
             const errorDiv = document.getElementById('error');
@@ -63,84 +63,88 @@
             optimizedStopsList.innerHTML = ''; // Clear previous results
 
             const waypoints = destinations.map(destination => ({ location: destination, stopover: true }));
+            let bestRoute = null;
+            let bestTime = Infinity;
 
-            const request = {
-                origin: pickup,
-                destination: destinations[destinations.length - 1],
-                waypoints: waypoints.slice(0, -1),
-                travelMode: 'DRIVING',
-                optimizeWaypoints: true // Optimize the order of waypoints for the shortest travel time
-            };
+            for (let i = 0; i < destinations.length; i++) {
+                const destination = destinations[i];
+                const otherWaypoints = waypoints.slice(0, i).concat(waypoints.slice(i + 1));
 
-            directionsService.route(request, function(result, status) {
-                if (status === 'OK') {
-                    const optimizedOrder = result.routes[0].waypoint_order;
-                    const optimizedWaypoints = optimizedOrder.map(index => ({ location: destinations[index], stopover: true }));
+                const request = {
+                    origin: pickup,
+                    destination: destination,
+                    waypoints: otherWaypoints,
+                    travelMode: 'DRIVING',
+                    optimizeWaypoints: true
+                };
 
-                    // Set the last optimized waypoint as the final destination
-                    const finalDestination = optimizedWaypoints.pop().location;
-
-                    // Create a new request with the optimized waypoints and final destination
-                    const optimizedRequest = {
-                        origin: pickup,
-                        destination: finalDestination,
-                        waypoints: optimizedWaypoints,
-                        travelMode: 'DRIVING',
-                        optimizeWaypoints: false // No need to optimize again
-                    };
-
-                    directionsService.route(optimizedRequest, function(optimizedResult, optimizedStatus) {
-                        if (optimizedStatus === 'OK') {
-                            directionsRenderer.setDirections(optimizedResult);
-
-                            const route = optimizedResult.routes[0];
-                            let totalDistance = 0;
-                            let totalTime = 0;
-
-                            route.legs.forEach(leg => {
-                                totalDistance += leg.distance.value;
-                                totalTime += leg.duration.value;
-                            });
-
-                            document.getElementById('total-distance').textContent = (totalDistance / 1000).toFixed(2) + ' km';
-                            document.getElementById('total-time').textContent = (totalTime / 60).toFixed(2) + ' mins';
-
-                            // Display the optimized order of stops
-                            optimizedOrder.forEach(index => {
-                                const li = document.createElement('li');
-                                li.textContent = destinations[index];
-                                optimizedStopsList.appendChild(li);
-                            });
-
-                            // Direct route calculation
-                            const directRequest = {
-                                origin: pickup,
-                                destination: finalDestination,
-                                travelMode: 'DRIVING'
-                            };
-
-                            directionsService.route(directRequest, function(directResult, directStatus) {
-                                if (directStatus === 'OK') {
-                                    const directLeg = directResult.routes[0].legs[0];
-                                    document.getElementById('direct-distance').textContent = directLeg.distance.text;
-                                } else {
-                                    errorDiv.textContent = 'Error calculating direct route: ' + directStatus;
-                                }
-                            });
-
-                            const routeUrl = 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(pickup) + '&destination=' + encodeURIComponent(finalDestination) + '&waypoints=' + encodeURIComponent(optimizedWaypoints.map(waypoint => waypoint.location).join('|'));
-                            const routeLink = document.getElementById('route-url');
-                            routeLink.href = routeUrl;
-                            routeLink.textContent = routeUrl;
-
+                const result = await new Promise((resolve, reject) => {
+                    directionsService.route(request, function(result, status) {
+                        if (status === 'OK') {
+                            resolve(result);
                         } else {
-                            errorDiv.textContent = 'Error calculating optimized route: ' + optimizedStatus;
+                            reject(status);
                         }
                     });
-                } else {
-                    errorDiv.textContent = 'Error calculating route: ' + status;
+                });
+
+                const route = result.routes[0];
+                let totalTime = 0;
+                route.legs.forEach(leg => {
+                    totalTime += leg.duration.value;
+                });
+
+                if (totalTime < bestTime) {
+                    bestTime = totalTime;
+                    bestRoute = result;
                 }
-            });
+            }
+
+            if (bestRoute) {
+                directionsRenderer.setDirections(bestRoute);
+
+                const route = bestRoute.routes[0];
+                let totalDistance = 0;
+                let totalTime = 0;
+
+                route.legs.forEach(leg => {
+                    totalDistance += leg.distance.value;
+                    totalTime += leg.duration.value;
+                });
+
+                document.getElementById('total-distance').textContent = (totalDistance / 1000).toFixed(2) + ' km';
+                document.getElementById('total-time').textContent = (totalTime / 60).toFixed(2) + ' mins';
+
+                const optimizedOrder = route.waypoint_order;
+                optimizedOrder.forEach(index => {
+                    const li = document.createElement('li');
+                    li.textContent = destinations[index];
+                    optimizedStopsList.appendChild(li);
+                });
+
+                // Direct route calculation
+                const directRequest = {
+                    origin: pickup,
+                    destination: destinations[optimizedOrder[optimizedOrder.length - 1]],
+                    travelMode: 'DRIVING'
+                };
+
+                directionsService.route(directRequest, function(directResult, directStatus) {
+                    if (directStatus === 'OK') {
+                        const directLeg = directResult.routes[0].legs[0];
+                        document.getElementById('direct-distance').textContent = directLeg.distance.text;
+                    } else {
+                        errorDiv.textContent = 'Error calculating direct route: ' + directStatus;
+                    }
+                });
+
+                const routeUrl = 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(pickup) + '&destination=' + encodeURIComponent(destinations[optimizedOrder[optimizedOrder.length - 1]]) + '&waypoints=' + encodeURIComponent(optimizedOrder.map(index => destinations[index]).join('|'));
+                const routeLink = document.getElementById('route-url');
+                routeLink.href = routeUrl;
+                routeLink.textContent = routeUrl;
+            } else {
+                errorDiv.textContent = 'Error finding the best route.';
+            }
         }
     </script>
     <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA3r0p1kyloJSECy3wk1tUQS8cAyTomxfY&callback=initMap"></script>
