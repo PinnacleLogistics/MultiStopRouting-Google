@@ -161,7 +161,7 @@
                 if (!bestOrder.includes(finalIndex)) {
                     bestOrder.push(finalIndex);
                     const liFinal = document.createElement('li');
-                    liFinal.textContent = `Delivery ${bestOrder.length}: ${formatLocation(finalDestination)}`;
+                    liFinal.textContent = `Delivery ${bestOrder.length + 1}: ${formatLocation(finalDestination)}`;
                     optimizedStopsList.appendChild(liFinal);
                 }
 
