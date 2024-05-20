@@ -18,6 +18,13 @@
         .highlight-orange {
             background-color: orange;
         }
+        #spinner {
+            display: none;
+            margin-top: 10px;
+        }
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -28,18 +35,21 @@
     <label for="destinations">Destinations (one per line):</label><br>
     <textarea id="destinations" rows="10" cols="50" placeholder="Enter each destination on a new line"></textarea><br><br>
     <button onclick="calculateRoute()">Calculate Route</button>
+    <div id="spinner">Calculating route, please wait...</div>
 
-    <h2>Results</h2>
-    <p>Total Miles: <span id="total-distance" class="highlight-green"></span></p>
-    <p>Total Transit: <span id="total-time"></span></p>
-    <p>1 Pick 1 Drop Mileage to Final Destination Only: <span id="direct-distance" class="highlight-orange"></span></p>
-    
-    <h2>Optimized Route</h2>
-    <ul id="route-segments"></ul>
-    <div id="final-destination-section"></div>
-    <p>Route Map URL: <a id="route-url" href="#" target="_blank"></a></p>
-    <div id="map"></div>
-    <div id="error" class="error"></div>
+    <div id="results" class="hidden">
+        <h2>Results</h2>
+        <p>Total Miles: <span id="total-distance" class="highlight-green"></span></p>
+        <p>Total Transit: <span id="total-time"></span></p>
+        <p>1 Pick 1 Drop Mileage to Final Destination Only: <span id="direct-distance" class="highlight-orange"></span></p>
+
+        <h2>Optimized Route</h2>
+        <ul id="route-segments"></ul>
+        <div id="final-destination-section"></div>
+        <p>Route Map URL: <a id="route-url" href="#" target="_blank"></a></p>
+        <div id="map"></div>
+        <div id="error" class="error"></div>
+    </div>
 
     <script>
         let map;
@@ -83,7 +93,23 @@
             return `${hours}h ${minutes}m`;
         }
 
+        function showSpinner() {
+            document.getElementById('spinner').style.display = 'block';
+            document.getElementById('results').classList.add('hidden');
+        }
+
+        function hideSpinner() {
+            document.getElementById('spinner').style.display = 'none';
+            document.getElementById('results').classList.remove('hidden');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('results').classList.add('hidden');
+        });
+
         async function calculateRoute() {
+            showSpinner();
+
             const pickup = document.getElementById('pickup').value;
             const destinations = document.getElementById('destinations').value.split('\n').filter(dest => dest.trim() !== '');
             const errorDiv = document.getElementById('error');
@@ -91,6 +117,7 @@
 
             if (!pickup || destinations.length === 0) {
                 errorDiv.textContent = 'Please enter both pickup location and at least one destination.';
+                hideSpinner();
                 return;
             }
 
@@ -103,7 +130,6 @@
             let bestOrder = [];
             let finalDestination = "";
 
-            // Optimize routes with each destination as the final stop
             for (let i = 0; i < destinations.length; i++) {
                 const destination = destinations[i];
                 const otherWaypoints = waypoints.slice(0, i).concat(waypoints.slice(i + 1));
@@ -137,11 +163,12 @@
                         bestTime = totalTime;
                         bestRoute = result;
                         bestOrder = result.routes[0].waypoint_order.slice();
-                        finalDestination = destination; // Store the final destination
+                        finalDestination = destination;
                     }
                 } catch (error) {
                     console.error('Error calculating route:', error);
                     errorDiv.textContent = `Error calculating route: ${error}`;
+                    hideSpinner();
                     return;
                 }
             }
@@ -159,7 +186,6 @@
                 });
 
                 try {
-                    // Calculate direct route mileage
                     const directRequest = {
                         origin: pickup,
                         destination: finalDestination,
@@ -185,13 +211,13 @@
                 } catch (error) {
                     console.error('Error calculating direct route:', error);
                     errorDiv.textContent = `Error calculating direct route: ${error}`;
+                    hideSpinner();
                     return;
                 }
 
                 document.getElementById('total-distance').textContent = formatDistance(totalDistance);
                 document.getElementById('total-time').textContent = formatTravelTime(totalTime);
 
-                // Display route segments
                 route.legs.forEach((leg, index) => {
                     const startLocation = formatLocation(leg.start_address);
                     const endLocation = formatLocation(leg.end_address);
@@ -200,22 +226,20 @@
 
                     const legText = index === 0 
                         ? `Pickup: ${startLocation} - ${distance} - ${duration} to next stop`
-                        : `Delivery ${index}: ${startLocation} - ${distance} - ${duration} to next stop`;
+                        : `Delivery ${index + 1}: ${startLocation} - ${distance} - ${duration} to next stop`;
 
                     const li = document.createElement('li');
                     li.textContent = legText;
                     routeSegmentsList.appendChild(li);
                 });
 
-                // Add final destination as a separate section
                 const finalDestinationSection = document.getElementById('final-destination-section');
                 const lastLeg = route.legs[route.legs.length - 1];
-                const finalDestinationText = `Delivery ${route.legs.length - 1}: ${formatLocation(lastLeg.end_address)}`;
+                const finalDestinationText = `Delivery ${route.legs.length}: ${formatLocation(lastLeg.end_address)}`;
                 finalDestinationSection.innerHTML = `
                     <ul><li>${finalDestinationText}</li></ul>
                 `;
 
-                // Generate route URL using the best route data
                 const waypointsString = bestOrder.map(index => encodeURIComponent(destinations[index])).join('|');
                 const routeUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(pickup)}&destination=${encodeURIComponent(finalDestination)}&waypoints=${waypointsString}`;
                 const routeLink = document.getElementById('route-url');
@@ -225,6 +249,8 @@
             } else {
                 errorDiv.textContent = 'Error finding the best route.';
             }
+
+            hideSpinner();
         }
     </script>
     <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA3r0p1kyloJSECy3wk1tUQS8cAyTomxfY&callback=initMap"></script>
