@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -11,12 +11,6 @@
         }
         .error {
             color: red;
-        }
-        .highlight-green {
-            background-color: lightgreen;
-        }
-        .highlight-orange {
-            background-color: orange;
         }
         .spinner-container {
             position: relative;
@@ -64,10 +58,9 @@
     <button onclick="calculateRoute()">Calculate Route</button>
 
     <h2>Results</h2>
-    <p>Total Miles: <span id="total-distance" class="highlight-green"></span></p>
-    <p>Total Transit: <span id="total-time"></span></p>
-    <p>1 Pick 1 Drop Mileage to Final Destination Only: <span id="direct-distance" class="highlight-orange"></span></p>
-    
+    <p>Total Distance: <span id="total-distance"></span></p>
+    <p>Total Travel Time: <span id="total-time"></span></p>
+    <p>1 Pick 1 Drop Mileage to Final Destination Only: <span id="direct-distance"></span></p>
     <h2>Optimized Route</h2>
     <ul id="route-segments"></ul>
     <p>Route Map URL: <a id="route-url" href="#" target="_blank"></a></p>
@@ -107,13 +100,13 @@
         }
 
         function formatDistance(distanceInMeters) {
-            return (distanceInMeters / 1609.34).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + ' mi';
+            return (distanceInMeters / 1609.34).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + ' miles';
         }
 
         function formatTravelTime(durationInSeconds) {
             const hours = Math.floor(durationInSeconds / 3600);
             const minutes = Math.round((durationInSeconds % 3600) / 60);
-            return `${hours}h ${minutes}m`;
+            return `${hours} Hours ${minutes} Minutes`;
         }
 
         async function calculateRoute() {
@@ -156,35 +149,27 @@
                     optimizeWaypoints: true
                 };
 
-                try {
-                    const result = await new Promise((resolve, reject) => {
-                        directionsService.route(request, function(result, status) {
-                            if (status === 'OK') {
-                                resolve(result);
-                            } else {
-                                reject(status);
-                            }
-                        });
+                const result = await new Promise((resolve, reject) => {
+                    directionsService.route(request, function(result, status) {
+                        if (status === 'OK') {
+                            resolve(result);
+                        } else {
+                            reject(status);
+                        }
                     });
+                });
 
-                    const route = result.routes[0];
-                    let totalTime = 0;
-                    route.legs.forEach(leg => {
-                        totalTime += leg.duration.value;
-                    });
+                const route = result.routes[0];
+                let totalTime = 0;
+                route.legs.forEach(leg => {
+                    totalTime += leg.duration.value;
+                });
 
-                    if (totalTime < bestTime) {
-                        bestTime = totalTime;
-                        bestRoute = result;
-                        bestOrder = result.routes[0].waypoint_order.slice();
-                        finalDestination = destination; // Store the final destination
-                    }
-                } catch (error) {
-                    console.error('Error calculating route:', error);
-                    errorDiv.textContent = `Error calculating route: ${error}`;
-                    spinner.style.display = 'none';
-                    spinnerMessage.style.display = 'none';
-                    return;
+                if (totalTime < bestTime) {
+                    bestTime = totalTime;
+                    bestRoute = result;
+                    bestOrder = result.routes[0].waypoint_order.slice();
+                    finalDestination = destination; // Store the final destination
                 }
             }
 
@@ -200,36 +185,28 @@
                     totalTime += leg.duration.value;
                 });
 
-                try {
-                    // Calculate direct route mileage
-                    const directRequest = {
-                        origin: pickup,
-                        destination: finalDestination,
-                        travelMode: 'DRIVING'
-                    };
+                // Calculate direct route mileage
+                const directRequest = {
+                    origin: pickup,
+                    destination: finalDestination,
+                    travelMode: 'DRIVING'
+                };
 
-                    const directResult = await new Promise((resolve, reject) => {
-                        directionsService.route(directRequest, function(result, status) {
-                            if (status === 'OK') {
-                                resolve(result);
-                            } else {
-                                reject(status);
-                            }
-                        });
+                const directResult = await new Promise((resolve, reject) => {
+                    directionsService.route(directRequest, function(result, status) {
+                        if (status === 'OK') {
+                            resolve(result);
+                        } else {
+                            reject(status);
+                        }
                     });
+                });
 
-                    if (directResult) {
-                        const directLeg = directResult.routes[0].legs[0];
-                        document.getElementById('direct-distance').textContent = formatDistance(directLeg.distance.value);
-                    } else {
-                        errorDiv.textContent = 'Error calculating direct route.';
-                    }
-                } catch (error) {
-                    console.error('Error calculating direct route:', error);
-                    errorDiv.textContent = `Error calculating direct route: ${error}`;
-                    spinner.style.display = 'none';
-                    spinnerMessage.style.display = 'none';
-                    return;
+                if (directResult) {
+                    const directLeg = directResult.routes[0].legs[0];
+                    document.getElementById('direct-distance').textContent = formatDistance(directLeg.distance.value);
+                } else {
+                    errorDiv.textContent = 'Error calculating direct route.';
                 }
 
                 document.getElementById('total-distance').textContent = formatDistance(totalDistance);
@@ -242,4 +219,26 @@
                     const duration = formatTravelTime(leg.duration.value);
 
                     const legText = index === 0 
-                        ? `Pickup: ${startLocation} - ${distance} - ${duration}
+                        ? `Pickup: ${startLocation} - ${distance} - ${duration} to next stop`
+                        : `Delivery ${index}: ${startLocation} - ${distance} - ${duration} to next stop`;
+
+                    const li = document.createElement('li');
+                    li.textContent = legText;
+                    routeSegmentsList.appendChild(li);
+                });
+
+                // Add final destination to the end of the optimized route section
+                const finalDestinationText = `Delivery ${route.legs.length}: ${formatLocation(finalDestination)}`;
+                const finalLi = document.createElement('li');
+                finalLi.textContent = finalDestinationText;
+                routeSegmentsList.appendChild(finalLi);
+
+                // Generate route URL using the best route data
+                const waypointsString = bestOrder.map(index => destinations[index]).join('|');
+                const routeUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(pickup)}&destination=${encodeURIComponent(finalDestination)}&waypoints=${encodeURIComponent(waypointsString)}`;
+                const routeLink = document.getElementById('route-url');
+                routeLink.href = routeUrl;
+                routeLink.textContent = routeUrl;
+
+            } else {
+                errorDiv.textContent
