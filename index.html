@@ -12,6 +12,24 @@
         .error {
             color: red;
         }
+        .spinner {
+            display: none;
+            border: 16px solid #f3f3f3;
+            border-top: 16px solid #3498db;
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            animation: spin 2s linear infinite;
+            margin: auto;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -21,6 +39,8 @@
     <label for="destinations">Destinations (one per line):</label><br>
     <textarea id="destinations" rows="10" cols="50" placeholder="Enter each destination on a new line"></textarea><br><br>
     <button onclick="calculateRoute()">Calculate Route</button>
+
+    <div class="spinner" id="spinner"></div>
 
     <h2>Results</h2>
     <p>Total Distance: <span id="total-distance"></span></p>
@@ -72,12 +92,16 @@
         }
 
         async function calculateRoute() {
+            const spinner = document.getElementById('spinner');
+            spinner.style.display = 'block';
+
             const pickup = document.getElementById('pickup').value;
             const destinations = document.getElementById('destinations').value.split('\n').filter(dest => dest.trim() !== '');
             const errorDiv = document.getElementById('error');
             const optimizedStopsList = document.getElementById('optimized-stops');
 
             if (!pickup || destinations.length === 0) {
+                spinner.style.display = 'none';
                 errorDiv.textContent = 'Please enter both pickup location and at least one destination.';
                 return;
             }
@@ -173,24 +197,17 @@
                 optimizedStopsList.appendChild(liPickup);
 
                 // Add the optimized stops based on the best route
-                bestOrder.forEach((index, stopNumber) => {
-                    const stop = waypoints[index].location;
+                const orderedDestinations = bestOrder.map(index => destinations[index]);
+                orderedDestinations.push(finalDestination);
+
+                orderedDestinations.forEach((stop, stopNumber) => {
                     const li = document.createElement('li');
                     li.textContent = `Delivery ${stopNumber + 1}: ${formatLocation(stop)}`;
                     optimizedStopsList.appendChild(li);
                 });
 
-                // Ensure the final destination is included in the URL and list
-                const finalIndex = destinations.indexOf(finalDestination);
-                if (!bestOrder.includes(finalIndex)) {
-                    bestOrder.push(finalIndex);
-                    const liFinal = document.createElement('li');
-                    liFinal.textContent = `Delivery ${bestOrder.length}: ${formatLocation(finalDestination)}`;
-                    optimizedStopsList.appendChild(liFinal);
-                }
-
                 // Generate route URL using the best route data
-                const waypointsString = bestOrder.map(index => waypoints[index].location).join('|');
+                const waypointsString = orderedDestinations.slice(0, -1).join('|');
                 const routeUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(pickup)}&destination=${encodeURIComponent(finalDestination)}&waypoints=${encodeURIComponent(waypointsString)}`;
                 const routeLink = document.getElementById('route-url');
                 routeLink.href = routeUrl;
@@ -199,6 +216,8 @@
             } else {
                 errorDiv.textContent = 'Error finding the best route.';
             }
+
+            spinner.style.display = 'none';
         }
     </script>
     <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA3r0p1kyloJSECy3wk1tUQS8cAyTomxfY&callback=initMap"></script>
