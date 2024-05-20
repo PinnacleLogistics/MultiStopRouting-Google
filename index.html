@@ -28,10 +28,6 @@
     </style>
 </head>
 <body>
-ul {
-    padding:0;
-    margin:0;
-}
     <h1>Route Optimizer</h1>
 
     <label for="pickup">Pickup Location:</label>
@@ -49,7 +45,8 @@ ul {
 
         <h2>Optimized Route</h2>
         <ul id="route-segments"></ul>
-        <div id="final-destination-section"></div>
+        <ul style="margin: 0"
+            id="final-destination-section"></ul>
         <p>Route Map URL: <a id="route-url" href="#" target="_blank"></a></p>
         <div id="map"></div>
         <div id="error" class="error"></div>
