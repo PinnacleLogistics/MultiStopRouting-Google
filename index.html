@@ -38,13 +38,11 @@
         let directionsRenderer;
 
         function initMap() {
-            // Initialize the map
             map = new google.maps.Map(document.getElementById('map'), {
                 zoom: 7,
-                center: {lat: 37.77, lng: -122.42} // Default center
+                center: {lat: 37.77, lng: -122.42}
             });
 
-            // Initialize the directions service and renderer
             directionsService = new google.maps.DirectionsService();
             directionsRenderer = new google.maps.DirectionsRenderer();
             directionsRenderer.setMap(map);
@@ -61,64 +59,79 @@
                 return;
             }
 
-            errorDiv.textContent = ''; // Clear previous errors
-            optimizedStopsList.innerHTML = ''; // Clear previous results
+            errorDiv.textContent = '';
+            optimizedStopsList.innerHTML = '';
 
             const waypoints = destinations.map(destination => ({ location: destination, stopover: true }));
 
             const request = {
                 origin: pickup,
-                destination: destinations[destinations.length - 1],
-                waypoints: waypoints.slice(0, -1),
+                destination: pickup,
+                waypoints: waypoints,
                 travelMode: 'DRIVING',
-                optimizeWaypoints: true // Optimize the order of waypoints for the shortest travel time
+                optimizeWaypoints: true
             };
 
             directionsService.route(request, function(result, status) {
                 if (status === 'OK') {
-                    directionsRenderer.setDirections(result);
+                    const optimizedOrder = result.routes[0].waypoint_order;
+                    const optimizedWaypoints = optimizedOrder.map(index => ({ location: destinations[index], stopover: true }));
 
-                    const route = result.routes[0];
-                    let totalDistance = 0;
-                    let totalTime = 0;
-
-                    route.legs.forEach(leg => {
-                        totalDistance += leg.distance.value;
-                        totalTime += leg.duration.value;
-                    });
-
-                    document.getElementById('total-distance').textContent = (totalDistance / 1000).toFixed(2) + ' km';
-                    document.getElementById('total-time').textContent = (totalTime / 60).toFixed(2) + ' mins';
-
-                    // Display the optimized order of stops
-                    const optimizedOrder = route.waypoint_order;
-                    optimizedOrder.forEach(index => {
-                        const li = document.createElement('li');
-                        li.textContent = destinations[index];
-                        optimizedStopsList.appendChild(li);
-                    });
-
-                    // Direct route calculation
-                    const directRequest = {
+                    // Re-run the optimization with the ordered waypoints
+                    const secondRequest = {
                         origin: pickup,
-                        destination: destinations[destinations.length - 1],
-                        travelMode: 'DRIVING'
+                        destination: pickup,
+                        waypoints: optimizedWaypoints,
+                        travelMode: 'DRIVING',
+                        optimizeWaypoints: false
                     };
 
-                    directionsService.route(directRequest, function(directResult, directStatus) {
-                        if (directStatus === 'OK') {
-                            const directLeg = directResult.routes[0].legs[0];
-                            document.getElementById('direct-distance').textContent = directLeg.distance.text;
+                    directionsService.route(secondRequest, function(secondResult, secondStatus) {
+                        if (secondStatus === 'OK') {
+                            directionsRenderer.setDirections(secondResult);
+
+                            const route = secondResult.routes[0];
+                            let totalDistance = 0;
+                            let totalTime = 0;
+
+                            route.legs.forEach(leg => {
+                                totalDistance += leg.distance.value;
+                                totalTime += leg.duration.value;
+                            });
+
+                            document.getElementById('total-distance').textContent = (totalDistance / 1000).toFixed(2) + ' km';
+                            document.getElementById('total-time').textContent = (totalTime / 60).toFixed(2) + ' mins';
+
+                            optimizedOrder.forEach(index => {
+                                const li = document.createElement('li');
+                                li.textContent = destinations[index];
+                                optimizedStopsList.appendChild(li);
+                            });
+
+                            const directRequest = {
+                                origin: pickup,
+                                destination: destinations[destinations.length - 1],
+                                travelMode: 'DRIVING'
+                            };
+
+                            directionsService.route(directRequest, function(directResult, directStatus) {
+                                if (directStatus === 'OK') {
+                                    const directLeg = directResult.routes[0].legs[0];
+                                    document.getElementById('direct-distance').textContent = directLeg.distance.text;
+                                } else {
+                                    errorDiv.textContent = 'Error calculating direct route: ' + directStatus;
+                                }
+                            });
+
+                            const routeUrl = 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(pickup) + '&destination=' + encodeURIComponent(destinations[destinations.length - 1]) + '&waypoints=' + encodeURIComponent(destinations.slice(0, -1).join('|'));
+                            const routeLink = document.getElementById('route-url');
+                            routeLink.href = routeUrl;
+                            routeLink.textContent = routeUrl;
+
                         } else {
-                            errorDiv.textContent = 'Error calculating direct route: ' + directStatus;
+                            errorDiv.textContent = 'Error calculating second route: ' + secondStatus;
                         }
                     });
-
-                    const routeUrl = 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(pickup) + '&destination=' + encodeURIComponent(destinations[destinations.length - 1]) + '&waypoints=' + encodeURIComponent(destinations.slice(0, -1).join('|'));
-                    const routeLink = document.getElementById('route-url');
-                    routeLink.href = routeUrl;
-                    routeLink.textContent = routeUrl;
-
                 } else {
                     errorDiv.textContent = 'Error calculating route: ' + status;
                 }
@@ -128,3 +141,10 @@
     <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA3r0p1kyloJSECy3wk1tUQS8cAyTomxfY&callback=initMap"></script>
 </body>
 </html>
+"""
+
+file_path = "/mnt/data/route_optimizer.html"
+with open(file_path, "w") as file:
+    file.write(html_content)
+
+file_path
