@@ -1,4 +1,5 @@
- <!DOCTYPE html>
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -12,6 +13,11 @@
         .error {
             color: red;
         }
+        .spinner-container {
+            position: relative;
+            text-align: center;
+            margin-top: 20px;
+        }
         .spinner {
             display: none;
             border: 16px solid #f3f3f3;
@@ -21,10 +27,16 @@
             height: 120px;
             animation: spin 2s linear infinite;
             margin: auto;
+        }
+        .spinner-message {
+            display: none;
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+            font-size: 20px;
+            color: black;
+            font-weight: bold;
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
@@ -34,13 +46,17 @@
 </head>
 <body>
     <h1>Route Optimizer</h1>
+
+    <div class="spinner-container">
+        <div class="spinner" id="spinner"></div>
+        <div class="spinner-message" id="spinner-message">Calculating the optimal route</div>
+    </div>
+
     <label for="pickup">Pickup Location:</label>
     <input type="text" id="pickup" placeholder="Enter pickup location"><br><br>
     <label for="destinations">Destinations (one per line):</label><br>
     <textarea id="destinations" rows="10" cols="50" placeholder="Enter each destination on a new line"></textarea><br><br>
     <button onclick="calculateRoute()">Calculate Route</button>
-
-    <div class="spinner" id="spinner"></div>
 
     <h2>Results</h2>
     <p>Total Distance: <span id="total-distance"></span></p>
@@ -93,7 +109,9 @@
 
         async function calculateRoute() {
             const spinner = document.getElementById('spinner');
+            const spinnerMessage = document.getElementById('spinner-message');
             spinner.style.display = 'block';
+            spinnerMessage.style.display = 'block';
 
             const pickup = document.getElementById('pickup').value;
             const destinations = document.getElementById('destinations').value.split('\n').filter(dest => dest.trim() !== '');
@@ -102,6 +120,7 @@
 
             if (!pickup || destinations.length === 0) {
                 spinner.style.display = 'none';
+                spinnerMessage.style.display = 'none';
                 errorDiv.textContent = 'Please enter both pickup location and at least one destination.';
                 return;
             }
@@ -200,28 +219,6 @@
                 const orderedDestinations = bestOrder.map(index => destinations[index]);
                 orderedDestinations.push(finalDestination);
 
-                // Place markers on the map with custom labels
-                const stops = [pickup, ...orderedDestinations];
-                stops.forEach((stop, index) => {
-                    new google.maps.Marker({
-                        position: bestRoute.legs[index].start_location,
-                        map: map,
-                        label: {
-                            text: `${index + 1}: ${formatLocation(stop)}`,
-                            color: "white",
-                            fontSize: "12px",
-                            fontWeight: "bold"
-                        },
-                        icon: {
-                            path: google.maps.SymbolPath.CIRCLE,
-                            scale: 10,
-                            fillColor: "#00F",
-                            fillOpacity: 1,
-                            strokeWeight: 0
-                        }
-                    });
-                });
-
                 orderedDestinations.forEach((stop, stopNumber) => {
                     const li = document.createElement('li');
                     li.textContent = `Delivery ${stopNumber + 1}: ${formatLocation(stop)}`;
@@ -240,6 +237,7 @@
             }
 
             spinner.style.display = 'none';
+            spinnerMessage.style.display = 'none';
         }
     </script>
     <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA3r0p1kyloJSECy3wk1tUQS8cAyTomxfY&callback=initMap"></script>
