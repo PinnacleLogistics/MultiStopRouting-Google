@@ -200,7 +200,7 @@
 
                     const legText = index === 0 
                         ? `Pickup: ${startLocation} - ${distance} - ${duration} to next stop`
-                        : `Delivery ${index}: ${startLocation} - ${distance} - ${duration} to next stop`;
+                        : `Delivery ${index + 1}: ${startLocation} - ${distance} - ${duration} to next stop`;
 
                     const li = document.createElement('li');
                     li.textContent = legText;
@@ -212,10 +212,8 @@
                 const lastLeg = route.legs[route.legs.length - 1];
                 const finalDestinationText = `Delivery ${route.legs.length}: ${formatLocation(lastLeg.end_address)}`;
                 finalDestinationSection.innerHTML = `
-                    <ul><li>${finalDestinationText}</li>
-                    </ul>
+                    <ul><li>${finalDestinationText}</li></ul>
                 `;
-                document.getElementById('final-destination-section').appendChild(finalDestinationSection);
 
                 // Generate route URL using the best route data
                 const waypointsString = bestOrder.map(index => destinations[index]).join('|');
