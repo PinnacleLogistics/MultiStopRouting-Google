@@ -1,4 +1,4 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -59,9 +59,8 @@
 
     <h2>Results</h2>
     <p>Total Distance: <span id="total-distance"></span></p>
-    <p>Total Transit: <span id="total-time"></span></p>
+    <p>Total Travel Time: <span id="total-time"></span></p>
     <p>1 Pick 1 Drop Mileage to Final Destination Only: <span id="direct-distance"></span></p>
-    
     <h2>Optimized Route</h2>
     <ul id="route-segments"></ul>
     <p>Route Map URL: <a id="route-url" href="#" target="_blank"></a></p>
@@ -101,13 +100,13 @@
         }
 
         function formatDistance(distanceInMeters) {
-            return (distanceInMeters / 1609.34).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + ' mi';
+            return (distanceInMeters / 1609.34).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + ' miles';
         }
 
         function formatTravelTime(durationInSeconds) {
             const hours = Math.floor(durationInSeconds / 3600);
             const minutes = Math.round((durationInSeconds % 3600) / 60);
-            return `${hours}h ${minutes}m`;
+            return `${hours} Hours ${minutes} Minutes`;
         }
 
         async function calculateRoute() {
@@ -216,18 +215,23 @@
                 // Display route segments
                 route.legs.forEach((leg, index) => {
                     const startLocation = formatLocation(leg.start_address);
-                    const endLocation = formatLocation(leg.end_address);
                     const distance = formatDistance(leg.distance.value);
                     const duration = formatTravelTime(leg.duration.value);
 
                     const legText = index === 0 
-                        ? `Pickup: ${startLocation} to ${endLocation} - ${distance} - ${duration} to next stop`
-                        : `Delivery ${index}: ${startLocation} to ${endLocation} - ${distance} - ${duration} to next stop`;
+                        ? `Pickup: ${startLocation} - ${distance} - ${duration} to next stop`
+                        : `Delivery ${index}: ${startLocation} - ${distance} - ${duration} to next stop`;
 
                     const li = document.createElement('li');
                     li.textContent = legText;
                     routeSegmentsList.appendChild(li);
                 });
+
+                // Add final destination to the end of the optimized route section
+                const finalDestinationText = `Delivery ${route.legs.length}: ${formatLocation(finalDestination)}`;
+                const finalLi = document.createElement('li');
+                finalLi.textContent = finalDestinationText;
+                routeSegmentsList.appendChild(finalLi);
 
                 // Generate route URL using the best route data
                 const waypointsString = bestOrder.map(index => destinations[index]).join('|');
@@ -243,6 +247,4 @@
             spinner.style.display = 'none';
             spinnerMessage.style.display = 'none';
         }
-    </script>
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA3r0p1kyloJSECy3wk1tUQS8cAyTomxfY&callback=initMap"></script>
-</body
+    </
