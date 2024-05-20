@@ -12,6 +12,12 @@
         .error {
             color: red;
         }
+        .highlight-green {
+            background-color: lightgreen;
+        }
+        .highlight-orange {
+            background-color: orange;
+        }
         .spinner-container {
             position: relative;
             text-align: center;
@@ -58,12 +64,13 @@
     <button onclick="calculateRoute()">Calculate Route</button>
 
     <h2>Results</h2>
-    <p>Total Distance: <span id="total-distance"></span></p>
-    <p>Total Travel Time: <span id="total-time"></span></p>
-    <p>1 Pick 1 Drop Mileage to Final Destination Only: <span id="direct-distance"></span></p>
+    <p>Total Miles: <span id="total-distance" class="highlight-green"></span></p>
+    <p>Total Transit: <span id="total-time"></span></p>
+    <p>1 Pick 1 Drop Mileage to Final Destination Only: <span id="direct-distance" class="highlight-orange"></span></p>
     
     <h2>Optimized Route</h2>
     <ul id="route-segments"></ul>
+    <div id="final-destination-section"></div>
     <p>Route Map URL: <a id="route-url" href="#" target="_blank"></a></p>
     <div id="map"></div>
     <div id="error" class="error"></div>
@@ -101,13 +108,13 @@
         }
 
         function formatDistance(distanceInMeters) {
-            return (distanceInMeters / 1609.34).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + ' miles';
+            return (distanceInMeters / 1609.34).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + ' mi';
         }
 
         function formatTravelTime(durationInSeconds) {
             const hours = Math.floor(durationInSeconds / 3600);
             const minutes = Math.round((durationInSeconds % 3600) / 60);
-            return `${hours} Hours ${minutes} Minutes`;
+            return `${hours}h ${minutes}m`;
         }
 
         async function calculateRoute() {
@@ -246,4 +253,4 @@
 
                 // Add final destination to the end of the optimized route section
                 const lastLeg = route.legs[route.legs.length - 1];
-                const finalDestinationText = `Delivery ${route.legs.length}: ${formatLocation(lastLeg.end_address)}`;
+                const finalDestinationText = `Delivery ${
