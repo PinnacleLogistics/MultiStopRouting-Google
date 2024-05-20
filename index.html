@@ -244,8 +244,8 @@
                     const duration = formatTravelTime(leg.duration.value);
 
                     const legText = index === 0 
-                        ? `Pickup: ${startLocation} to ${endLocation} - ${distance} - ${duration} to next stop`
-                        : `Delivery ${index}: ${startLocation} to ${endLocation} - ${distance} - ${duration} to next stop`;
+                        ? `Pickup: ${startLocation} - ${distance} - ${duration} to next stop`
+                        : `Delivery ${index}: ${startLocation} - ${distance} - ${duration} to next stop`;
 
                     const li = document.createElement('li');
                     li.textContent = legText;
@@ -257,7 +257,6 @@
                 const lastLeg = route.legs[route.legs.length - 1];
                 const finalDestinationText = `Delivery ${route.legs.length}: ${formatLocation(lastLeg.end_address)}`;
                 finalDestinationSection.innerHTML = `
-                    <h2>Final Destination</h2>
                     <ul>
                         <li>${finalDestinationText}</li>
                     </ul>
@@ -270,6 +269,10 @@
                 const routeLink = document.getElementById('route-url');
                 routeLink.href = routeUrl;
                 routeLink.textContent = routeUrl;
+
+// Ensure the spinner is hidden
+spinner.style.display = 'none';
+spinnerMessage.style.display = 'none';
 
             } else {
                 errorDiv.textContent = 'Error finding the best route.';
