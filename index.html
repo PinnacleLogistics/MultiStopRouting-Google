@@ -140,32 +140,7 @@
                     totalTime += leg.duration.value;
                 });
 
-                document.getElementById('total-distance').textContent = formatDistance(totalDistance);
-                document.getElementById('total-time').textContent = formatTravelTime(totalTime);
-
-                // Add pickup location as the first stop
-                const liPickup = document.createElement('li');
-                liPickup.textContent = `Pickup Location: ${formatLocation(pickup)}`;
-                optimizedStopsList.appendChild(liPickup);
-
-                // Add the optimized stops
-                bestOrder.forEach((index, stopNumber) => {
-                    const stop = destinations[index];
-                    const li = document.createElement('li');
-                    li.textContent = `Delivery ${stopNumber + 1}: ${formatLocation(stop)}`;
-                    optimizedStopsList.appendChild(li);
-                });
-
-                // Ensure the final destination is included in the URL and list
-                const finalIndex = destinations.indexOf(finalDestination);
-                if (!bestOrder.includes(finalIndex)) {
-                    bestOrder.push(finalIndex);
-                    const liFinal = document.createElement('li');
-                    liFinal.textContent = `Delivery ${bestOrder.length + 1}: ${formatLocation(finalDestination)}`;
-                    optimizedStopsList.appendChild(liFinal);
-                }
-
-                // Direct route calculation
+                // Calculate direct route mileage
                 const directRequest = {
                     origin: pickup,
                     destination: finalDestination,
@@ -189,12 +164,38 @@
                     errorDiv.textContent = 'Error calculating direct route.';
                 }
 
+                document.getElementById('total-distance').textContent = formatDistance(totalDistance);
+                document.getElementById('total-time').textContent = formatTravelTime(totalTime);
+
+                // Add pickup location as the first stop
+                const liPickup = document.createElement('li');
+                liPickup.textContent = `Pickup Location: ${formatLocation(pickup)}`;
+                optimizedStopsList.appendChild(liPickup);
+
+                // Add the optimized stops
+                bestOrder.forEach((index, stopNumber) => {
+                    const stop = destinations[index];
+                    const li = document.createElement('li');
+                    li.textContent = `Delivery ${stopNumber + 1}: ${formatLocation(stop)}`;
+                    optimizedStopsList.appendChild(li);
+                });
+
+                // Ensure the final destination is included in the URL and list
+                const finalIndex = destinations.indexOf(finalDestination);
+                if (!bestOrder.includes(finalIndex)) {
+                    bestOrder.push(finalIndex);
+                    const liFinal = document.createElement('li');
+                    liFinal.textContent = `Delivery ${bestOrder.length}: ${formatLocation(finalDestination)}`;
+                    optimizedStopsList.appendChild(liFinal);
+                }
+
                 // Generate route URL
                 const waypointsString = bestOrder.slice(0, -1).map(index => destinations[index]).join('|');
                 const routeUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(pickup)}&destination=${encodeURIComponent(finalDestination)}&waypoints=${encodeURIComponent(waypointsString)}`;
                 const routeLink = document.getElementById('route-url');
                 routeLink.href = routeUrl;
                 routeLink.textContent = routeUrl;
+
             } else {
                 errorDiv.textContent = 'Error finding the best route.';
             }
