@@ -61,8 +61,8 @@
     <p>Total Distance: <span id="total-distance"></span></p>
     <p>Total Travel Time: <span id="total-time"></span></p>
     <p>1 Pick 1 Drop Mileage to Final Destination Only: <span id="direct-distance"></span></p>
-    <p>Optimized Order of Stops:</p>
-    <ul id="optimized-stops"></ul>
+    <p>Route Segments:</p>
+    <ul id="route-segments"></ul>
     <p>Route Map URL: <a id="route-url" href="#" target="_blank"></a></p>
     <div id="map"></div>
     <div id="error" class="error"></div>
@@ -115,7 +115,7 @@
             const pickup = document.getElementById('pickup').value;
             const destinations = document.getElementById('destinations').value.split('\n').filter(dest => dest.trim() !== '');
             const errorDiv = document.getElementById('error');
-            const optimizedStopsList = document.getElementById('optimized-stops');
+            const routeSegmentsList = document.getElementById('route-segments');
 
             if (!pickup || destinations.length === 0) {
                 spinner.style.display = 'none';
@@ -125,7 +125,7 @@
             }
 
             errorDiv.textContent = ''; // Clear previous errors
-            optimizedStopsList.innerHTML = ''; // Clear previous results
+            routeSegmentsList.innerHTML = ''; // Clear previous results
 
             const waypoints = destinations.map(destination => ({ location: destination, stopover: true }));
             let bestRoute = null;
@@ -209,23 +209,20 @@
                 document.getElementById('total-distance').textContent = formatDistance(totalDistance);
                 document.getElementById('total-time').textContent = formatTravelTime(totalTime);
 
-                // Add pickup location as the first stop
-                const liPickup = document.createElement('li');
-                liPickup.textContent = `Pickup Location: ${formatLocation(pickup)}`;
-                optimizedStopsList.appendChild(liPickup);
+                // Display route segments
+                route.legs.forEach((leg, index) => {
+                    const startLocation = formatLocation(leg.start_address);
+                    const endLocation = formatLocation(leg.end_address);
+                    const distance = formatDistance(leg.distance.value);
+                    const duration = formatTravelTime(leg.duration.value);
 
-                // Add the optimized stops based on the best route
-                const orderedDestinations = bestOrder.map(index => destinations[index]);
-                orderedDestinations.push(finalDestination);
-
-                orderedDestinations.forEach((stop, stopNumber) => {
                     const li = document.createElement('li');
-                    li.textContent = `Delivery ${stopNumber + 1}: ${formatLocation(stop)}`;
-                    optimizedStopsList.appendChild(li);
+                    li.textContent = `Leg ${index + 1} - ${startLocation} to ${endLocation} - ${distance} - ${duration}`;
+                    routeSegmentsList.appendChild(li);
                 });
 
                 // Generate route URL using the best route data
-                const waypointsString = orderedDestinations.slice(0, -1).join('|');
+                const waypointsString = bestOrder.map(index => destinations[index]).join('|');
                 const routeUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(pickup)}&destination=${encodeURIComponent(finalDestination)}&waypoints=${encodeURIComponent(waypointsString)}`;
                 const routeLink = document.getElementById('route-url');
                 routeLink.href = routeUrl;
