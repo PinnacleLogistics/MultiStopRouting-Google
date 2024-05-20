@@ -124,7 +124,6 @@
                     bestTime = totalTime;
                     bestRoute = result;
                     bestOrder = result.routes[0].waypoint_order.slice();
-                    bestOrder.push(i); // Ensure the last destination is included
                     finalDestination = destination; // Store the final destination
                 }
             }
@@ -156,6 +155,14 @@
                     li.textContent = `Delivery ${stopNumber + 1}: ${formatLocation(stop)}`;
                     optimizedStopsList.appendChild(li);
                 });
+
+                // Ensure the final destination is included in the URL and list
+                if (!bestOrder.includes(destinations.indexOf(finalDestination))) {
+                    const liFinal = document.createElement('li');
+                    liFinal.textContent = `Delivery ${bestOrder.length + 1}: ${formatLocation(finalDestination)}`;
+                    optimizedStopsList.appendChild(liFinal);
+                    bestOrder.push(destinations.indexOf(finalDestination));
+                }
 
                 // Direct route calculation
                 const directRequest = {
