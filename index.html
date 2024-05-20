@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -172,9 +172,9 @@
                 liPickup.textContent = `Pickup Location: ${formatLocation(pickup)}`;
                 optimizedStopsList.appendChild(liPickup);
 
-                // Add the optimized stops
+                // Add the optimized stops based on the best route
                 bestOrder.forEach((index, stopNumber) => {
-                    const stop = destinations[index];
+                    const stop = waypoints[index].location;
                     const li = document.createElement('li');
                     li.textContent = `Delivery ${stopNumber + 1}: ${formatLocation(stop)}`;
                     optimizedStopsList.appendChild(li);
@@ -189,8 +189,8 @@
                     optimizedStopsList.appendChild(liFinal);
                 }
 
-                // Generate route URL
-                const waypointsString = bestOrder.slice(0, -1).map(index => destinations[index]).join('|');
+                // Generate route URL using the best route data
+                const waypointsString = bestOrder.map(index => waypoints[index].location).join('|');
                 const routeUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(pickup)}&destination=${encodeURIComponent(finalDestination)}&waypoints=${encodeURIComponent(waypointsString)}`;
                 const routeLink = document.getElementById('route-url');
                 routeLink.href = routeUrl;
