@@ -40,7 +40,7 @@
         function initMap() {
             map = new google.maps.Map(document.getElementById('map'), {
                 zoom: 7,
-                center: {lat: 37.77, lng: -122.42}
+                center: {lat: 37.77, lng: -122.42} // Default center
             });
 
             directionsService = new google.maps.DirectionsService();
@@ -59,17 +59,17 @@
                 return;
             }
 
-            errorDiv.textContent = '';
-            optimizedStopsList.innerHTML = '';
+            errorDiv.textContent = ''; // Clear previous errors
+            optimizedStopsList.innerHTML = ''; // Clear previous results
 
             const waypoints = destinations.map(destination => ({ location: destination, stopover: true }));
 
             const request = {
                 origin: pickup,
-                destination: pickup,
-                waypoints: waypoints,
+                destination: destinations[destinations.length - 1],
+                waypoints: waypoints.slice(0, -1),
                 travelMode: 'DRIVING',
-                optimizeWaypoints: true
+                optimizeWaypoints: true // Optimize the order of waypoints for the shortest travel time
             };
 
             directionsService.route(request, function(result, status) {
@@ -77,20 +77,23 @@
                     const optimizedOrder = result.routes[0].waypoint_order;
                     const optimizedWaypoints = optimizedOrder.map(index => ({ location: destinations[index], stopover: true }));
 
-                    // Re-run the optimization with the ordered waypoints
-                    const secondRequest = {
+                    // Set the last optimized waypoint as the final destination
+                    const finalDestination = optimizedWaypoints.pop().location;
+
+                    // Create a new request with the optimized waypoints and final destination
+                    const optimizedRequest = {
                         origin: pickup,
-                        destination: pickup,
+                        destination: finalDestination,
                         waypoints: optimizedWaypoints,
                         travelMode: 'DRIVING',
-                        optimizeWaypoints: false
+                        optimizeWaypoints: false // No need to optimize again
                     };
 
-                    directionsService.route(secondRequest, function(secondResult, secondStatus) {
-                        if (secondStatus === 'OK') {
-                            directionsRenderer.setDirections(secondResult);
+                    directionsService.route(optimizedRequest, function(optimizedResult, optimizedStatus) {
+                        if (optimizedStatus === 'OK') {
+                            directionsRenderer.setDirections(optimizedResult);
 
-                            const route = secondResult.routes[0];
+                            const route = optimizedResult.routes[0];
                             let totalDistance = 0;
                             let totalTime = 0;
 
@@ -102,15 +105,17 @@
                             document.getElementById('total-distance').textContent = (totalDistance / 1000).toFixed(2) + ' km';
                             document.getElementById('total-time').textContent = (totalTime / 60).toFixed(2) + ' mins';
 
+                            // Display the optimized order of stops
                             optimizedOrder.forEach(index => {
                                 const li = document.createElement('li');
                                 li.textContent = destinations[index];
                                 optimizedStopsList.appendChild(li);
                             });
 
+                            // Direct route calculation
                             const directRequest = {
                                 origin: pickup,
-                                destination: destinations[destinations.length - 1],
+                                destination: finalDestination,
                                 travelMode: 'DRIVING'
                             };
 
@@ -123,13 +128,13 @@
                                 }
                             });
 
-                            const routeUrl = 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(pickup) + '&destination=' + encodeURIComponent(destinations[destinations.length - 1]) + '&waypoints=' + encodeURIComponent(destinations.slice(0, -1).join('|'));
+                            const routeUrl = 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(pickup) + '&destination=' + encodeURIComponent(finalDestination) + '&waypoints=' + encodeURIComponent(optimizedWaypoints.map(waypoint => waypoint.location).join('|'));
                             const routeLink = document.getElementById('route-url');
                             routeLink.href = routeUrl;
                             routeLink.textContent = routeUrl;
 
                         } else {
-                            errorDiv.textContent = 'Error calculating second route: ' + secondStatus;
+                            errorDiv.textContent = 'Error calculating optimized route: ' + optimizedStatus;
                         }
                     });
                 } else {
@@ -141,10 +146,3 @@
     <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA3r0p1kyloJSECy3wk1tUQS8cAyTomxfY&callback=initMap"></script>
 </body>
 </html>
-"""
-
-file_path = "/mnt/data/route_optimizer.html"
-with open(file_path, "w") as file:
-    file.write(html_content)
-
-file_path
