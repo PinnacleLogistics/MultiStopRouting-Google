@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -49,7 +49,7 @@
         function initMap() {
             map = new google.maps.Map(document.getElementById('map'), {
                 zoom: 7,
-                center: { lat: 37.77, lng: -122.42 } // Default center
+                center: { lat: 37.77, lng: -122.42 }
             });
 
             directionsService = new google.maps.DirectionsService();
@@ -59,7 +59,7 @@
 
         function formatLocation(location) {
             const parts = location.split(',').map(part => part.trim());
-            if (parts.length === 3) { // remove country part if it exists
+            if (parts.length === 3) {
                 const [city, state] = parts;
                 return `${capitalizeWords(city)}, ${state.toUpperCase()}`;
             } else if (parts.length === 2) {
