@@ -64,8 +64,10 @@
             });
 
             directionsService = new google.maps.DirectionsService();
-            directionsRenderer = new google.maps.DirectionsRenderer();
-            directionsRenderer.setMap(map);
+            directionsRenderer = new google.maps.DirectionsRenderer({
+                map: map,
+                suppressMarkers: true // Suppress default markers
+            });
         }
 
         function formatLocation(location) {
@@ -200,6 +202,28 @@
                 const orderedDestinations = bestOrder.map(index => destinations[index]);
                 orderedDestinations.push(finalDestination);
 
+                // Place markers on the map with custom labels
+                const stops = [pickup, ...orderedDestinations];
+                stops.forEach((stop, index) => {
+                    new google.maps.Marker({
+                        position: { lat: bestRoute.routes[0].legs[index].start_location.lat(), lng: bestRoute.routes[0].legs[index].start_location.lng() },
+                        map: map,
+                        label: {
+                            text: `${index}: ${formatLocation(stop)}`,
+                            color: "white",
+                            fontSize: "12px",
+                            fontWeight: "bold"
+                        },
+                        icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            scale: 10,
+                            fillColor: "#00F",
+                            fillOpacity: 1,
+                            strokeWeight: 0
+                        }
+                    });
+                });
+
                 orderedDestinations.forEach((stop, stopNumber) => {
                     const li = document.createElement('li');
                     li.textContent = `Delivery ${stopNumber + 1}: ${formatLocation(stop)}`;
@@ -220,6 +244,4 @@
             spinner.style.display = 'none';
         }
     </script>
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA3r0p1kyloJSECy3wk1tUQS8cAyTomxfY&callback=initMap"></script>
-</body>
-</html>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA3r0p1kyloJSECy3wk1tUQS8cAyTomxfY
