@@ -218,11 +218,9 @@
                 const orderedDestinations = bestOrder.map(index => destinations[index]);
                 orderedDestinations.push(finalDestination);
 
-                // Display the first City, ST of each segment
-                route.legs.forEach((leg, stopNumber) => {
-                    const location = formatLocation(leg.start_address);
+                orderedDestinations.forEach((stop, stopNumber) => {
                     const li = document.createElement('li');
-                    li.textContent = `Delivery ${stopNumber + 1}: ${location}`;
+                    li.textContent = `Delivery ${stopNumber + 1}: ${formatLocation(stop)}`;
                     optimizedStopsList.appendChild(li);
                 });
 
@@ -238,3 +236,9 @@
             }
 
             spinner.style.display = 'none';
+            spinnerMessage.style.display = 'none';
+        }
+    </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA3r0p1kyloJSECy3wk1tUQS8cAyTomxfY&callback=initMap"></script>
+</body>
+</html>
