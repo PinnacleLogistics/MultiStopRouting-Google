@@ -64,10 +64,8 @@
             });
 
             directionsService = new google.maps.DirectionsService();
-            directionsRenderer = new google.maps.DirectionsRenderer({
-                map: map,
-                suppressMarkers: true // Suppress default markers
-            });
+            directionsRenderer = new google.maps.DirectionsRenderer();
+            directionsRenderer.setMap(map);
         }
 
         function formatLocation(location) {
@@ -206,10 +204,10 @@
                 const stops = [pickup, ...orderedDestinations];
                 stops.forEach((stop, index) => {
                     new google.maps.Marker({
-                        position: { lat: bestRoute.routes[0].legs[index].start_location.lat(), lng: bestRoute.routes[0].legs[index].start_location.lng() },
+                        position: bestRoute.legs[index].start_location,
                         map: map,
                         label: {
-                            text: `${index}: ${formatLocation(stop)}`,
+                            text: `${index + 1}: ${formatLocation(stop)}`,
                             color: "white",
                             fontSize: "12px",
                             fontWeight: "bold"
@@ -244,4 +242,6 @@
             spinner.style.display = 'none';
         }
     </script>
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA3r0p1kyloJSECy3wk1tUQS8cAyTomxfY
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA3r0p1kyloJSECy3wk1tUQS8cAyTomxfY&callback=initMap"></script>
+</body>
+</html>
