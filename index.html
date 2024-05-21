@@ -25,17 +25,6 @@
         .hidden {
             display: none;
         }
-        #legend {
-            background: white;
-            padding: 10px;
-            margin: 10px;
-            border: 1px solid black;
-            font-size: 14px;
-            display: none; /* Hide the legend initially */
-        }
-        #legend img {
-            vertical-align: middle;
-        }
     </style>
 </head>
 <body>
@@ -65,11 +54,6 @@
         <div id="error" class="error"></div>
     </div>
 
-    <div id="legend">
-        <h3>Legend</h3>
-        <p><img src="https://openweathermap.org/img/wn/10d.png" alt="Precipitation Icon"> Precipitation</p>
-    </div>
-
     <script>
         let map;
         let directionsService;
@@ -95,10 +79,6 @@
                 name: "Precipitation"
             });
             map.overlayMapTypes.insertAt(0, precipitationLayer);
-
-            // Add legend to the map
-            const legend = document.getElementById('legend');
-            map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(legend);
         }
 
         function toggleWeatherLayer() {
@@ -143,10 +123,6 @@
         function hideSpinner() {
             document.getElementById('spinner').style.display = 'none';
             document.getElementById('results').classList.remove('hidden');
-        }
-
-        function showLegend() {
-            document.getElementById('legend').style.display = 'block';
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -303,9 +279,6 @@
                 const routeLink = document.getElementById('route-url');
                 routeLink.href = routeUrl;
                 routeLink.textContent = routeUrl;
-
-                // Show the legend after calculations are done
-                showLegend();
 
             } else {
                 errorDiv.textContent = 'Error finding the best route.';
