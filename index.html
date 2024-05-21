@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -25,6 +25,16 @@
         .hidden {
             display: none;
         }
+        #legend {
+            background: white;
+            padding: 10px;
+            margin: 10px;
+            border: 1px solid black;
+            font-size: 14px;
+        }
+        #legend img {
+            vertical-align: middle;
+        }
     </style>
 </head>
 <body>
@@ -37,7 +47,7 @@
     <button onclick="calculateRoute()">Calculate Route</button>
     <div id="spinner">Calculating route, please wait...</div>
     <div>
-        <input type="checkbox" id="weather-toggle" checked onclick="toggleWeatherLayer()"> Show Weather Overlay
+        <input type="checkbox" id="weather-toggle" checked onclick="toggleWeatherLayer()"> Show Precipitation Overlay
     </div>
 
     <div id="results" class="hidden">
@@ -54,11 +64,16 @@
         <div id="error" class="error"></div>
     </div>
 
+    <div id="legend">
+        <h3>Legend</h3>
+        <p><img src="https://openweathermap.org/img/wn/10d.png" alt="Precipitation Icon"> Precipitation</p>
+    </div>
+
     <script>
         let map;
         let directionsService;
         let directionsRenderer;
-        let weatherLayer;
+        let precipitationLayer;
 
         function initMap() {
             map = new google.maps.Map(document.getElementById('map'), {
@@ -70,20 +85,24 @@
             directionsRenderer = new google.maps.DirectionsRenderer();
             directionsRenderer.setMap(map);
 
-            // Initialize the weather layer
-            weatherLayer = new google.maps.ImageMapType({
+            // Initialize the precipitation layer
+            precipitationLayer = new google.maps.ImageMapType({
                 getTileUrl: function(coord, zoom) {
-                    return `https://tile.openweathermap.org/map/clouds_new/${zoom}/${coord.x}/${coord.y}.png?appid=7371d4d33e38f8bb3c65f295bd60a38d`;
+                    return `https://tile.openweathermap.org/map/precipitation_new/${zoom}/${coord.x}/${coord.y}.png?appid=7371d4d33e38f8bb3c65f295bd60a38d`;
                 },
                 tileSize: new google.maps.Size(256, 256),
-                name: "Weather"
+                name: "Precipitation"
             });
-            map.overlayMapTypes.insertAt(0, weatherLayer);
+            map.overlayMapTypes.insertAt(0, precipitationLayer);
+
+            // Add legend to the map
+            const legend = document.getElementById('legend');
+            map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(legend);
         }
 
         function toggleWeatherLayer() {
             if (document.getElementById('weather-toggle').checked) {
-                map.overlayMapTypes.insertAt(0, weatherLayer);
+                map.overlayMapTypes.insertAt(0, precipitationLayer);
             } else {
                 map.overlayMapTypes.removeAt(0);
             }
