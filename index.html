@@ -36,6 +36,9 @@
     <textarea id="destinations" rows="10" cols="50" placeholder="Enter each destination on a new line"></textarea><br><br>
     <button onclick="calculateRoute()">Calculate Route</button>
     <div id="spinner">Calculating route, please wait...</div>
+    <div>
+        <input type="checkbox" id="weather-toggle" checked onclick="toggleWeatherLayer()"> Show Weather Overlay
+    </div>
 
     <div id="results" class="hidden">
         <h2>Results</h2>
@@ -55,6 +58,7 @@
         let map;
         let directionsService;
         let directionsRenderer;
+        let weatherLayer;
 
         function initMap() {
             map = new google.maps.Map(document.getElementById('map'), {
@@ -65,6 +69,18 @@
             directionsService = new google.maps.DirectionsService();
             directionsRenderer = new google.maps.DirectionsRenderer();
             directionsRenderer.setMap(map);
+
+            // Initialize the weather layer
+            weatherLayer = new google.maps.weather.WeatherLayer();
+            weatherLayer.setMap(map);
+        }
+
+        function toggleWeatherLayer() {
+            if (document.getElementById('weather-toggle').checked) {
+                weatherLayer.setMap(map);
+            } else {
+                weatherLayer.setMap(null);
+            }
         }
 
         function formatLocation(location) {
@@ -218,38 +234,45 @@
                 document.getElementById('total-distance').textContent = formatDistance(totalDistance);
                 document.getElementById('total-time').textContent = formatTravelTime(totalTime);
 
-const waypoints = [];
-route.legs.forEach((leg, index) => {
-    const startLocation = formatLocation(leg.start_address);
-    const endLocation = formatLocation(leg.end_address);
-    const distance = formatDistance(leg.distance.value);
-    const duration = formatTravelTime(leg.duration.value);
+                const waypoints = [];
+                route.legs.forEach((leg, index) => {
+                    const startLocation = formatLocation(leg.start_address);
+                    const endLocation = formatLocation(leg.end_address);
+                    const distance = formatDistance(leg.distance.value);
+                    const duration = formatTravelTime(leg.duration.value);
 
-    const legText = index === 0 
-        ? `Pickup: ${startLocation} - ${distance} - ${duration} to next stop`
-        : `Delivery ${index}: ${startLocation} - ${distance} - ${duration} to next stop`;
-    if (index > 0) {
-        waypoints.push(encodeURIComponent(startLocation));
-    }
+                    const legText = index === 0 
+                        ? `Pickup: ${startLocation} - ${distance} - ${duration} to next stop`
+                        : `Delivery ${index}: ${startLocation} - ${distance} - ${duration} to next stop`;
+                    if (index > 0) {
+                        waypoints.push(encodeURIComponent(startLocation));
+                    }
 
-    const li = document.createElement('li');
-    li.textContent = legText;
-    routeSegmentsList.appendChild(li);
-});
+                    const li = document.createElement('li');
+                    li.textContent = legText;
+                    routeSegmentsList.appendChild(li);
+                });
 
-const finalDestinationSection = document.getElementById('final-destination-section');
-const lastLeg = route.legs[route.legs.length - 1];
-const finalDestinationText = `Delivery ${route.legs.length}: ${formatLocation(lastLeg.end_address)}`;
-finalDestinationSection.innerHTML = `
-    <ul><li>${finalDestinationText}</li></ul>
-`;
+                const finalDestinationSection = document.getElementById('final-destination-section');
+                const lastLeg = route.legs[route.legs.length - 1];
+                const finalDestinationText = `Delivery ${route.legs.length}: ${formatLocation(lastLeg.end_address)}`;
+                finalDestinationSection.innerHTML = `
+                    <ul><li>${finalDestinationText}</li></ul>
+                `;
 
-const waypointsString = waypoints.join('|');
-const routeUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(pickup)}&destination=${encodeURIComponent(finalDestination)}&waypoints=${waypointsString}`;
-const routeLink = document.getElementById('route-url');
-routeLink.href = routeUrl;
-routeLink.textContent = routeUrl;
+                // Adjust the map to fit the route
+                const bounds = new google.maps.LatLngBounds();
+                route.legs.forEach((leg) => {
+                    bounds.extend(leg.start_location);
+                    bounds.extend(leg.end_location);
+                });
+                map.fitBounds(bounds);
 
+                const waypointsString = waypoints.join('|');
+                const routeUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(pickup)}&destination=${encodeURIComponent(finalDestination)}&waypoints=${waypointsString}`;
+                const routeLink = document.getElementById('route-url');
+                routeLink.href = routeUrl;
+                routeLink.textContent = routeUrl;
 
             } else {
                 errorDiv.textContent = 'Error finding the best route.';
