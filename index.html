@@ -31,6 +31,7 @@
             margin: 10px;
             border: 1px solid black;
             font-size: 14px;
+            display: none; /* Hide the legend initially */
         }
         #legend img {
             vertical-align: middle;
@@ -142,6 +143,10 @@
         function hideSpinner() {
             document.getElementById('spinner').style.display = 'none';
             document.getElementById('results').classList.remove('hidden');
+        }
+
+        function showLegend() {
+            document.getElementById('legend').style.display = 'block';
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -298,6 +303,9 @@
                 const routeLink = document.getElementById('route-url');
                 routeLink.href = routeUrl;
                 routeLink.textContent = routeUrl;
+
+                // Show the legend after calculations are done
+                showLegend();
 
             } else {
                 errorDiv.textContent = 'Error finding the best route.';
