@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -71,15 +71,21 @@
             directionsRenderer.setMap(map);
 
             // Initialize the weather layer
-            weatherLayer = new google.maps.weather.WeatherLayer();
-            weatherLayer.setMap(map);
+            weatherLayer = new google.maps.ImageMapType({
+                getTileUrl: function(coord, zoom) {
+                    return `https://tile.openweathermap.org/map/clouds_new/${zoom}/${coord.x}/${coord.y}.png?appid=7371d4d33e38f8bb3c65f295bd60a38d`;
+                },
+                tileSize: new google.maps.Size(256, 256),
+                name: "Weather"
+            });
+            map.overlayMapTypes.insertAt(0, weatherLayer);
         }
 
         function toggleWeatherLayer() {
             if (document.getElementById('weather-toggle').checked) {
-                weatherLayer.setMap(map);
+                map.overlayMapTypes.insertAt(0, weatherLayer);
             } else {
-                weatherLayer.setMap(null);
+                map.overlayMapTypes.removeAt(0);
             }
         }
 
